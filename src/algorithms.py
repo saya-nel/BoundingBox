@@ -20,8 +20,8 @@ def ritter(points):
     cRadius = 0.5 * p.distance(q)
     rest.remove(p)
     rest.remove(q)
-    while not len(rest):
-        s = rest.remove(0)
+    while len(rest):
+        s = rest.pop()
         distanceFromCToS = math.sqrt(
             (s.x - cX) * (s.x - cX) + (s.y - cY) * (s.y - cY))
         if distanceFromCToS <= cRadius:
