@@ -35,6 +35,7 @@ def showAlgorithms(points, gen=None):
     ax.add_artist(plt.Circle((ritter_circle.center.x, ritter_circle.center.y),
                              ritter_circle.radius, color='r', alpha=0.5))
     ax.scatter(x_list, y_list, 1)
+    print(toussaint(points))
     plt.show()
 
 
