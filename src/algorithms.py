@@ -1,4 +1,5 @@
 from utils import *
+import sys
 import math
 
 
@@ -56,7 +57,8 @@ def quickHull(points):
     rest = filter(lambda e: not (triangleContientPoint(
         ouest, sud, est, e) or triangleContientPoint(ouest, est, nord, e)), rest)
 
-    for i in range(len(result)):
+    i = 0
+    while(i < len(result)):
         a = result[i]
         b = result[(i + 1) % len(result)]
         ref = result[(i + 2) % len(result)]
@@ -75,86 +77,57 @@ def quickHull(points):
                 ouest, sud, est, e) or triangleContientPoint(ouest, est, nord, e)), rest)
             result.insert(i + 1, maxPoint)
             i = i-1
+        i = i + 1
     return result
 
 
 def toussaint(points):
 
-    #   // On ne pourra pas faire le rectangle minimum si l'enveloppe n'a pas 4
-    #   // points.
-    #   if (hull.size() < 4) {
-    #     throw new IllegalArgumentException("L'enveloppe convexe ne contient que "
-    #         + hull.size() + " points.");
-    #   }
     if len(points) < 4:
         return None
+
     # on récupère l'enveloppe convexe
     enveloppe = quickHull(points)
-    #   // Première étape : On cherche les quatre points extremes (abscisses
-    #   // minimum & maximum, ordonnées minimum & maximum)
 
-    #   // On garde en mémoire les indexs des points i, j, k et l.
+    #   // Première étape : On cherche les quatre points extremes
     index_i = index_j = index_k = index_l = 0
-    #   // Première position des points, utilisée pour vérifier quand on a fait
-    #   // un tour complet.
     index_i0 = index_j0 = index_k0 = index_l0 = 0
+
     for i in range(1, len(enveloppe)):
-        #     // i est le point d'abscisse minimum
         if enveloppe[i].x < enveloppe[index_i].x:
             index_i = i
-    #     // l est le point d'ordonnée minimum
         if enveloppe[i].y < enveloppe[index_l].y:
             index_l = i
-    #     // k est le point d'abscisse maximum
         if enveloppe[i].x > enveloppe[index_k].x:
             index_k = i
-    #     // j est le point d'ordonnée maximum
         if enveloppe[i].y > enveloppe[index_j].y:
             index_j = i
-    #   // Si deux points extrêmes sont confondus, l'algorithme de Toussaint ne
-    #   // marchera pas.
     if index_i == index_j or index_i == index_k or index_i == index_l or index_j == index_k or index_j == index_l or index_k == index_l:
         return None
-
     index_i0 = index_i
     index_j0 = index_j
     index_k0 = index_k
     index_l0 = index_l
 
-#   // Deuxième étape : On initialise les lignes de support (lignes passant
-#   // par les 4 points i, j, k et l)
+#   // Deuxième étape : On initialise les lignes de support
     support_i = Line(enveloppe[index_i], [0, 1])
     support_j = Line(enveloppe[index_j], [1, 0])
     support_k = Line(enveloppe[index_k], [0, -1])
     support_l = Line(enveloppe[index_l], [-1, 0])
 
-#   // Condition d'arrêt
-    hullScanned = False
-#   // Auxiliaire à la condition d'arrêt, vérifie si le point concerné à
-#   // bien avancé.
-    iStepped = jStepped = kStepped = lStepped = False
-#   // Le nombre de fois que l'un des points i, j, k ou l passe par sa
-#   // position initiale
+    hullScanned = False  # cond arret
+    iStepped = jStepped = kStepped = lStepped = False  # cond arret
     count = 0
-
-#   // Les cosinus entre les lignes de support et le prochain coté de
-#   // l'enveloppe convexe
-#   // La valeur maximum de ces cosinus (correspond à l'angle minimum)
+    # angle min
     cos_theta_max = 0
     index_cos_max = 0
-#   // Le rectangle resultat
-    res = Rectangle(support_i, support_j, support_k, support_l)
-#   // L'aire du rectangle resultat
-    areaMin = -1
-#   // Le rectangle actuel
-    rect = res
+    res = Rectangle(support_i.intersection(support_j), support_j.intersection(
+        support_k), support_k.intersection(support_l), support_l.intersection(support_i))
+    areaMin = res.area()
+    rect = res  # rect actu
 #   // Tant que l'on n'a pas fini de parcourir l'enveloppe convexe.
     while not hullScanned:
-        #     /*
-        #      * Pour chaque point, on calcule le cosinus entre sa ligne de support et
-        #      * le prochain coté dans l'enveloppe convexe. De plus, on garde en mémoire
-        #      * la valeur du cosinus maximum, et l'index du point corresepondant.
-        #      */
+        # calcul des angles
         cos_theta_i = cosine(support_i, Line(
             enveloppe[index_i], None, enveloppe[(index_i + 1) % len(enveloppe)]))
         cos_theta_j = cosine(support_j, Line(
@@ -165,6 +138,7 @@ def toussaint(points):
         else:
             cos_theta_max = cos_theta_j
             index_cos_max = index_j
+
         cos_theta_k = cosine(support_k, Line(
             enveloppe[index_k], None, enveloppe[(index_k + 1) % len(enveloppe)]))
         if cos_theta_k > cos_theta_max:
@@ -189,7 +163,7 @@ def toussaint(points):
             support_j = Line(
                 enveloppe[index_j], [support_i.vect[1], -support_i.vect[0]])
             support_k = Line(
-                enveloppe[index_k], [-support_j.vect[0], -support_j.vect[1]])
+                enveloppe[index_k], [-support_i.vect[0], -support_i.vect[1]])
             support_l = Line(
                 enveloppe[index_l], [-support_j.vect[0], -support_j.vect[1]])
 
@@ -246,14 +220,12 @@ def toussaint(points):
         rect = Rectangle(support_i.intersection(support_j), support_j.intersection(
             support_k), support_k.intersection(support_l), support_l.intersection(support_i))
         # // Mise à jour du rectangle minimum
-        if areaMin == -1 or rect.area() < areaMin:
+        if rect.area() < areaMin:
             res = rect
             areaMin = rect.area()
 #     // Si l'un des points a bougé et qu'il est revenu à son point de
 #     // départ
-        if iStepped and index_i == index_i0 or jStepped and index_j == index_j0 or kStepped and index_k == index_k0 or lStepped and index_l == index_l0:
-            # // On incrémente le compteur.
+        if (iStepped and index_i == index_i0) or (jStepped and index_j == index_j0) or (kStepped and index_k == index_k0) or (lStepped and index_l == index_l0):
             count = count + 1
-#     // Condition d'arrêt
         hullScanned = (count >= 4)
-        return res
+    return res

@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from algorithms import *
 import tests
 
@@ -25,7 +26,7 @@ def showAlgorithms(points, gen=None):
     # get all points coordinates
     x_list = [p.x for p in points]
     y_list = [p.y for p in points]
-    # draw points
+    # draw points & ritter
     ritter_circle = ritter(points)
     plt.xlim(ritter_circle.center.x - ritter_circle.radius*1.5,
              ritter_circle.center.x + ritter_circle.radius*1.5)
@@ -35,7 +36,22 @@ def showAlgorithms(points, gen=None):
     ax.add_artist(plt.Circle((ritter_circle.center.x, ritter_circle.center.y),
                              ritter_circle.radius, color='r', alpha=0.5))
     ax.scatter(x_list, y_list, 1)
-    print(toussaint(points))
+    # draw quickHull
+    qh = quickHull(points)
+    for i in range(1, len(qh)):
+        plt.plot([qh[i - 1].x, qh[i].x],
+                 [qh[i - 1].y, qh[i].y], color='g')
+    plt.plot([qh[0].x, qh[len(qh) - 1].x],
+             [qh[0].y, qh[len(qh) - 1].y], color='g')
+    # draw toussaint
+    touss = toussaint(points)
+    touss_l = [touss.a, touss.b, touss.c, touss.d]
+    for i in range(1, len(touss_l)):
+        plt.plot([touss_l[i - 1].x, touss_l[i].x],
+                 [touss_l[i - 1].y, touss_l[i].y], color='b')
+    plt.plot([touss_l[0].x, touss_l[len(touss_l) - 1].x],
+             [touss_l[0].y, touss_l[len(touss_l) - 1].y], color='b')
+
     plt.show()
 
 

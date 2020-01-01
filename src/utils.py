@@ -36,22 +36,22 @@ class Line:
         self.point = point
         if p2 is None:
             self.vect = vect
-        else:
+        elif vect is None:
             if point.x == p2.x:
                 self.vect = [0, 1]
             else:
                 self.vect = [p2.x - point.x, p2.y - point.y]
 
     def intersection(self, l):
-        if self.incline == l.incline():
-            return None
         if self.vect[0] == 0:
             if l.vect[0] == 0:
                 return None
             else:
                 return Point(self.point.x, l.incline() * self.point.x + l.origin_y())
         if l.vect[0] == 0:
-            return Point(self.point.x, self.incline() * l.point.x + self.origin_y())
+            return Point(l.point.x, self.incline() * l.point.x + self.origin_y())
+        if self.incline() == l.incline():
+            return None
         x_coord = (l.origin_y() - self.origin_y()) / \
             (self.incline() - l.incline())
         return Point(x_coord, self.incline() * x_coord + self.origin_y())
@@ -77,4 +77,4 @@ def crossProduct(p, q, s, t):
 
 
 def cosine(a, b):
-    return abs((a.vect[0] * b.vect[0] + a.vect[1] * b.vect[1]) / (math.sqrt(a.vect[0] * a.vect[0] + a.vect[1] * a.vect[1])) * math.sqrt(b.vect[0] * b.vect[0] + b.vect[1] * b.vect[1]))
+    return abs((a.vect[0] * b.vect[0] + a.vect[1] * b.vect[1]) / (math.sqrt(a.vect[0] * a.vect[0] + a.vect[1] * a.vect[1]) * math.sqrt(b.vect[0] * b.vect[0] + b.vect[1] * b.vect[1])))
