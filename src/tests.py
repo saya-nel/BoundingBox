@@ -14,4 +14,4 @@ def get_points_from_file(fic):
 def gen_lists():
     tests_files = ["samples/" + f for f in os.listdir("samples")]
     for fic in tests_files:
-        yield get_points_from_file(fic)
+        yield get_points_from_file(fic), fic

@@ -4,29 +4,34 @@ from algorithms import *
 import tests
 
 
-def showAlgorithms(points, gen=None):
-    fig, ax = plt.subplots()
+def showAlgorithms(points, name, gen=None):
+    # window parameters
+    fig, ax = plt.subplots(num=name)
     ax.set_xlabel('x')
     ax.set_ylabel('y')
 
+    # event for switch tests
     def press(event):
         if event.key == 'd':
-            n = next(gen)
-            if n is not None:
-                showAlgorithms(next(gen), gen)
+            next_points, file_name = next(gen)
+            if next_points is not None:
+                showAlgorithms(next_points, file_name, gen)
             plt.close(fig)
     if gen is not None:
         fig.canvas.mpl_connect('key_press_event', press)
 
     # display legend
+    toussaint_leg = patches.Patch(color='b', label='Toussaint')
     ritter_leg = plt.Line2D([0], [0], marker='o', color="w", alpha=0.5, label='Ritter',
-                            markerfacecolor="r", markersize=15),
-    plt.legend(handles=ritter_leg)
+                            markerfacecolor="r", markersize=15)
+    plt.legend(handles=[toussaint_leg, ritter_leg])
 
-    # get all points coordinates
+    # draw points
     x_list = [p.x for p in points]
     y_list = [p.y for p in points]
-    # draw points & ritter
+    ax.scatter(x_list, y_list, 1)
+
+    # draw ritter
     ritter_circle = ritter(points)
     plt.xlim(ritter_circle.center.x - ritter_circle.radius*1.5,
              ritter_circle.center.x + ritter_circle.radius*1.5)
@@ -35,14 +40,7 @@ def showAlgorithms(points, gen=None):
     ax.set_aspect('equal')
     ax.add_artist(plt.Circle((ritter_circle.center.x, ritter_circle.center.y),
                              ritter_circle.radius, color='r', alpha=0.5))
-    ax.scatter(x_list, y_list, 1)
-    # draw quickHull
-    qh = quickHull(points)
-    for i in range(1, len(qh)):
-        plt.plot([qh[i - 1].x, qh[i].x],
-                 [qh[i - 1].y, qh[i].y], color='g')
-    plt.plot([qh[0].x, qh[len(qh) - 1].x],
-             [qh[0].y, qh[len(qh) - 1].y], color='g')
+
     # draw toussaint
     touss = toussaint(points)
     touss_l = [touss.a, touss.b, touss.c, touss.d]
@@ -52,13 +50,14 @@ def showAlgorithms(points, gen=None):
     plt.plot([touss_l[0].x, touss_l[len(touss_l) - 1].x],
              [touss_l[0].y, touss_l[len(touss_l) - 1].y], color='b')
 
+    # dislay
     plt.show()
 
 
 def showAllFiles():
-    t = tests.gen_lists()
-    l = next(t)
-    showAlgorithms(l, t)
+    gen = tests.gen_lists()
+    l, fic = next(gen)
+    showAlgorithms(l, fic, gen)
 
 
 if __name__ == '__main__':
