@@ -11,17 +11,15 @@ def get_points_from_file(fic):
     res = []
     for line in f:
         coords = line.split()
-        try:
-            res.append(Point(int(coords[0]), int(coords[1])))
-        except:
-            return res
+        res.append(Point(int(coords[0]), int(coords[1])))
     f.close()
     return res
 
 
 def gen_lists():
     """Return the generator that allow to get all points from a testing file"""
-    tests_files = ["samples/" + f for f in os.listdir("samples")]
+    tests_files = ["samples/" +
+                   f for f in os.listdir("samples") if f != "test-1.points"]
     for fic in tests_files:
         yield get_points_from_file(fic), fic
 
@@ -53,3 +51,28 @@ def algorithms_time(gap):
         touss.append(execution_time(toussaint, points[:i]))
         rit.append(execution_time(ritter, points[:i]))
     return touss, rit
+
+
+def quality(points):
+    """Return the quality of toussaint's and ritter's containers"""
+    p_area = polygon_area(graham(points))
+    touss_area = toussaint(points).area()
+    ritt_area = ritter(points).area()
+    touss_quality = (touss_area / p_area) - 1
+    ritt_quality = (ritt_area / p_area) - 1
+    return touss_quality, ritt_quality
+
+
+def algorithms_quality():
+    """Return algorithms qualities in all test files"""
+    gen = gen_lists()
+    touss_qualities = []
+    ritt_qualities = []
+    i = 0
+    for points, f in gen:
+        i = i+1
+        print("testing quality for file : ", f)
+        touss_quality, ritt_quality = quality(points)
+        touss_qualities.append(touss_quality)
+        ritt_qualities.append(ritt_quality)
+    return touss_qualities, ritt_qualities

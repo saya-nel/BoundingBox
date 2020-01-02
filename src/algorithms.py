@@ -97,146 +97,131 @@ def toussaint(points):
     if len(points) < 4:
         return None
 
-    # on récupère l'enveloppe convexe
+    # get convex hull
     enveloppe = graham(points)
 
-    #   // Première étape : On cherche les quatre points extremes
-    index_i = index_j = index_k = index_l = 0
-    index_i0 = index_j0 = index_k0 = index_l0 = 0
+    # compute end points
+    i_ind = j_ind = k_ind = l_ind = 0
+    i_start = j_start = k_start = l_start = 0
 
     for i in range(1, len(enveloppe)):
-        if enveloppe[i].x < enveloppe[index_i].x:
-            index_i = i
-        if enveloppe[i].y < enveloppe[index_l].y:
-            index_l = i
-        if enveloppe[i].x > enveloppe[index_k].x:
-            index_k = i
-        if enveloppe[i].y > enveloppe[index_j].y:
-            index_j = i
-    if index_i == index_j or index_i == index_k or index_i == index_l or index_j == index_k or index_j == index_l or index_k == index_l:
-        return None
-    index_i0 = index_i
-    index_j0 = index_j
-    index_k0 = index_k
-    index_l0 = index_l
+        if enveloppe[i].x < enveloppe[i_ind].x:
+            i_ind = i
+        if enveloppe[i].y < enveloppe[l_ind].y:
+            l_ind = i
+        if enveloppe[i].x > enveloppe[k_ind].x:
+            k_ind = i
+        if enveloppe[i].y > enveloppe[j_ind].y:
+            j_ind = i
 
-#   // Deuxième étape : On initialise les lignes de support
-    support_i = Line(enveloppe[index_i], [0, 1])
-    support_j = Line(enveloppe[index_j], [1, 0])
-    support_k = Line(enveloppe[index_k], [0, -1])
-    support_l = Line(enveloppe[index_l], [-1, 0])
+    i_start = i_ind
+    j_start = j_ind
+    k_start = k_ind
+    l_start = l_ind
 
-    hullScanned = False  # cond arret
-    iStepped = jStepped = kStepped = lStepped = False  # cond arret
+    # compute lines passing by i,j,k,l
+    i_line = Line(enveloppe[i_ind], [0, 1])
+    j_line = Line(enveloppe[j_ind], [1, 0])
+    k_line = Line(enveloppe[k_ind], [0, -1])
+    l_line = Line(enveloppe[l_ind], [-1, 0])
+
+    hullFinished = False
+    i_incr = j_incr = k_incr = l_incr = False
     count = 0
-    # angle min
-    cos_theta_max = 0
-    index_cos_max = 0
-    res = Rectangle(support_i.intersection(support_j), support_j.intersection(
-        support_k), support_k.intersection(support_l), support_l.intersection(support_i))
-    areaMin = res.area()
-    rect = res  # rect actu
-#   // Tant que l'on n'a pas fini de parcourir l'enveloppe convexe.
-    while not hullScanned:
-        # calcul des angles
-        cos_theta_i = cosine(support_i, Line(
-            enveloppe[index_i], None, enveloppe[(index_i + 1) % len(enveloppe)]))
-        cos_theta_j = cosine(support_j, Line(
-            enveloppe[index_j], None, enveloppe[(index_j + 1) % len(enveloppe)]))
-        if cos_theta_i > cos_theta_j:
-            cos_theta_max = cos_theta_i
-            index_cos_max = index_i
+    max_cos = 0
+    max_cos_ind = 0
+    res = Rectangle(i_line.intersection(j_line), j_line.intersection(
+        k_line), k_line.intersection(l_line), l_line.intersection(i_line))
+    min_area = res.area()
+    rect = res
+
+    while not hullFinished:
+        # compute corners
+        i_cos = cosine(i_line, Line(
+            enveloppe[i_ind], None, enveloppe[(i_ind + 1) % len(enveloppe)]))
+        j_cos = cosine(j_line, Line(
+            enveloppe[j_ind], None, enveloppe[(j_ind + 1) % len(enveloppe)]))
+        if i_cos > j_cos:
+            max_cos = i_cos
+            max_cos_ind = i_ind
         else:
-            cos_theta_max = cos_theta_j
-            index_cos_max = index_j
+            max_cos = j_cos
+            max_cos_ind = j_ind
+        k_cos = cosine(k_line, Line(
+            enveloppe[k_ind], None, enveloppe[(k_ind + 1) % len(enveloppe)]))
+        if k_cos > max_cos:
+            max_cos = k_cos
+            max_cos_ind = k_ind
+        l_cos = cosine(l_line, Line(
+            enveloppe[l_ind], None, enveloppe[(l_ind + 1) % len(enveloppe)]))
+        if l_cos > max_cos:
+            max_cos = l_cos
+            max_cos_ind = l_ind
 
-        cos_theta_k = cosine(support_k, Line(
-            enveloppe[index_k], None, enveloppe[(index_k + 1) % len(enveloppe)]))
-        if cos_theta_k > cos_theta_max:
-            cos_theta_max = cos_theta_k
-            index_cos_max = index_k
+        # rotation
+        if max_cos_ind == i_ind:
+            i_line = Line(
+                enveloppe[i_ind], None, enveloppe[(i_ind + 1) % len(enveloppe)])
+            j_line = Line(
+                enveloppe[j_ind], [i_line.vect[1], -i_line.vect[0]])
+            k_line = Line(
+                enveloppe[k_ind], [-i_line.vect[0], -i_line.vect[1]])
+            l_line = Line(
+                enveloppe[l_ind], [-j_line.vect[0], -j_line.vect[1]])
+            i_ind = (i_ind + 1) % len(enveloppe)
+            i_line.point = enveloppe[i_ind]
+            i_incr = True
 
-        cos_theta_l = cosine(support_l, Line(
-            enveloppe[index_l], None, enveloppe[(index_l + 1) % len(enveloppe)]))
-        if cos_theta_l > cos_theta_max:
-            cos_theta_max = cos_theta_l
-            index_cos_max = index_l
+        elif max_cos_ind == j_ind:
+            j_line = Line(
+                enveloppe[j_ind], None, enveloppe[(j_ind + 1) % len(enveloppe)])
+            k_line = Line(
+                enveloppe[k_ind], [j_line.vect[1], -j_line.vect[0]])
+            l_line = Line(
+                enveloppe[l_ind], [-j_line.vect[0], -j_line.vect[1]])
+            i_line = Line(
+                enveloppe[i_ind], [-k_line.vect[0], -k_line.vect[1]])
 
-#     /*
-#      * Quatrième étape : On fait avancer le point correspondant à l'angle
-#      * minimum. Sa ligne support est alors confondue avec le prochain coté de
-#      * l'enveloppe convexe, et on détermine les trois autres lignes de support
-#      * en fonction de celle-ci (orthogonale / inverse)
-#      */
-        if index_cos_max == index_i:
-            support_i = Line(
-                enveloppe[index_i], None, enveloppe[(index_i + 1) % len(enveloppe)])
-            support_j = Line(
-                enveloppe[index_j], [support_i.vect[1], -support_i.vect[0]])
-            support_k = Line(
-                enveloppe[index_k], [-support_i.vect[0], -support_i.vect[1]])
-            support_l = Line(
-                enveloppe[index_l], [-support_j.vect[0], -support_j.vect[1]])
+            j_ind = (j_ind + 1) % len(enveloppe)
+            j_line.point = enveloppe[j_ind]
+            j_incr = True
 
-            index_i = (index_i + 1) % len(enveloppe)
-            support_i.point = enveloppe[index_i]
-            # // Le point i a bougé(condition d'arrêt)
-            iStepped = True
-        elif index_cos_max == index_j:
-            support_j = Line(
-                enveloppe[index_j], None, enveloppe[(index_j + 1) % len(enveloppe)])
-            support_k = Line(
-                enveloppe[index_k], [support_j.vect[1], -support_j.vect[0]])
-            support_l = Line(
-                enveloppe[index_l], [-support_j.vect[0], -support_j.vect[1]])
-            support_i = Line(
-                enveloppe[index_i], [-support_k.vect[0], -support_k.vect[1]])
-
-            index_j = (index_j + 1) % len(enveloppe)
-            support_j.point = enveloppe[index_j]
-        # // Le point j a bougé (condition d'arrêt)
-            jStepped = True
-
-        elif index_cos_max == index_k:
-            support_k = Line(
-                enveloppe[index_k], None, enveloppe[(index_k + 1) % len(enveloppe)])
-            support_l = Line(
-                enveloppe[index_l], [support_k.vect[1], -support_k.vect[0]])
-            support_i = Line(
-                enveloppe[index_i], [-support_k.vect[0], -support_k.vect[1]])
-            support_j = Line(
-                enveloppe[index_j], [-support_l.vect[0], -support_l.vect[1]])
-
-            index_k = (index_k + 1) % len(enveloppe)
-            support_k.point = enveloppe[index_k]
-            # // Le piont k a bougé (condition d'arrêt)
-            kStepped = True
+        elif max_cos_ind == k_ind:
+            k_line = Line(
+                enveloppe[k_ind], None, enveloppe[(k_ind + 1) % len(enveloppe)])
+            l_line = Line(
+                enveloppe[l_ind], [k_line.vect[1], -k_line.vect[0]])
+            i_line = Line(
+                enveloppe[i_ind], [-k_line.vect[0], -k_line.vect[1]])
+            j_line = Line(
+                enveloppe[j_ind], [-l_line.vect[0], -l_line.vect[1]])
+            k_ind = (k_ind + 1) % len(enveloppe)
+            k_line.point = enveloppe[k_ind]
+            k_incr = True
 
         else:
-            support_l = Line(
-                enveloppe[index_l], None, enveloppe[(index_l + 1) % len(enveloppe)])
-            support_i = Line(
-                enveloppe[index_i], [support_l.vect[1], -support_l.vect[0]])
-            support_j = Line(
-                enveloppe[index_j], [-support_l.vect[0], -support_l.vect[1]])
-            support_k = Line(
-                enveloppe[index_k], [-support_i.vect[0], -support_i.vect[1]])
-            index_l = (index_l + 1) % len(enveloppe)
-            support_l.point = enveloppe[index_l]
-            # // Le point l a bougé (condition d'arrêt)
-            lStepped = True
+            l_line = Line(
+                enveloppe[l_ind], None, enveloppe[(l_ind + 1) % len(enveloppe)])
+            i_line = Line(
+                enveloppe[i_ind], [l_line.vect[1], -l_line.vect[0]])
+            j_line = Line(
+                enveloppe[j_ind], [-l_line.vect[0], -l_line.vect[1]])
+            k_line = Line(
+                enveloppe[k_ind], [-i_line.vect[0], -i_line.vect[1]])
+            l_ind = (l_ind + 1) % len(enveloppe)
+            l_line.point = enveloppe[l_ind]
+            l_incr = True
 
-#     // Cinquième étape : On calcule l'aire du rectangle.
-
-        rect = Rectangle(support_i.intersection(support_j), support_j.intersection(
-            support_k), support_k.intersection(support_l), support_l.intersection(support_i))
-        # // Mise à jour du rectangle minimum
-        if rect.area() < areaMin:
+        # compute rectangle and rectangle area
+        rect = Rectangle(i_line.intersection(j_line), j_line.intersection(
+            k_line), k_line.intersection(l_line), l_line.intersection(i_line))
+        if rect.area() < min_area:
             res = rect
-            areaMin = rect.area()
-#     // Si l'un des points a bougé et qu'il est revenu à son point de
-#     // départ
-        if (iStepped and index_i == index_i0) or (jStepped and index_j == index_j0) or (kStepped and index_k == index_k0) or (lStepped and index_l == index_l0):
+            min_area = rect.area()
+
+        # update finish conditions
+        if (i_incr and i_ind == i_start) or (j_incr and j_ind == j_start) or (k_incr and k_ind == k_start) or (l_incr and l_ind == l_start):
             count = count + 1
-        hullScanned = (count >= 4)
+        hullFinished = (count >= 4)
+
     return res

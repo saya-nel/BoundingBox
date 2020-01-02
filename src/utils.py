@@ -22,6 +22,10 @@ class Circle:
         self.center = center
         self.radius = radius
 
+    def area(self):
+        """Return the Circle area"""
+        return math.pi * self.radius**2
+
 
 class Rectangle:
 
@@ -90,3 +94,13 @@ def crossProduct(p, q, s, t):
 def cosine(a, b):
     """Return the absolute value of the cosine of the angle between two lines"""
     return abs((a.vect[0] * b.vect[0] + a.vect[1] * b.vect[1]) / (math.sqrt(a.vect[0] * a.vect[0] + a.vect[1] * a.vect[1]) * math.sqrt(b.vect[0] * b.vect[0] + b.vect[1] * b.vect[1])))
+
+
+def polygon_area(points):
+    """Return the area of the polygon given in arg"""
+    res = 0
+    for i in range(len(points)):
+        j = (i+1) % len(points)
+        res = res + points[i].x * points[j].y
+        res = res - points[j].x * points[i].y
+    return abs(res) / 2

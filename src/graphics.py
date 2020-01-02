@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from algorithms import *
 import tests
+import statistics
+import sys
 
 
 def showAlgorithms(points, name, gen=None):
@@ -90,7 +92,39 @@ def showExecutionTime(gap):
     plt.show()
 
 
+def showAlgorithmsQuality():
+    """Display the algorithms quality"""
+    fig, ax = plt.subplots(num="Quality")
+    ax.set_xlabel("File index")
+    ax.set_ylabel("quality")
+
+    file_numbers = range(1, 1664)
+    touss, rit = tests.algorithms_quality()
+
+    plt.plot(file_numbers, touss, color="g", label="Toussaint", alpha=0.3)
+    plt.plot(file_numbers, rit, color="r", label="Ritter", alpha=0.3)
+    plt.legend()
+
+    print("moyenne | toussaint :", statistics.mean(touss), "ritter :", statistics.mean(
+        rit))
+    print("ecart type | toussaint :", statistics.stdev(
+        touss), "ritter :", statistics.stdev(rit))
+    plt.show()
+
+
 if __name__ == '__main__':
-    # showAllFiles()
-    # showAlgorithms(tests.get_random_points(100), "t")
-    print(showExecutionTime(10000))
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "quality":
+            showAlgorithmsQuality()
+        elif sys.argv[1] == "time":
+            if len(sys.argv) > 2:
+                try:
+                    showExecutionTime(int(sys.argv[2]))
+                except:
+                    print(
+                        "le dernier argument doit etre un entier positif, representant le gap.")
+            else:
+                showExecutionTime(1000)
+    else:
+        print("Vous pouvez passer au test suivant en appuyant sur la touche 'd'")
+        showAllFiles()
