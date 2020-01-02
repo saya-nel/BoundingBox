@@ -1,9 +1,15 @@
 from utils import *
 import sys
 import math
+import array
+import time
 
 
 def ritter(points):
+    """
+    Return the smallest bouding Circle given by ritter algorithm
+    applied to the points list
+    """
     if len(points) < 1:
         return None
     rest = points[:]  # copie de la liste
@@ -38,56 +44,61 @@ def ritter(points):
     return Circle(Point(cX, cY), cRadius)
 
 
-def quickHull(points):
+def trie_pixel(points):
+    '''Sort the points list'''
     if len(points) < 4:
         return None
-    nord = sud = ouest = est = points[0]
+    maxX = points[0].x
     for p in points:
-        if p.x < ouest.x:
-            ouest = p
-        if p.y > sud.y:
-            sud = p
-        if p.x > est.x:
-            est = p
-        if p.y < nord.y:
-            nord = p
-    result = [ouest, sud, est, nord]
-    rest = points[:]
+        if p.x > maxX:
+            maxX = p.x
+    maxY = [None for i in range(maxX + 1)]
+    minY = [None for i in range(maxX + 1)]
+    for p in points:
+        if maxY[p.x] is None or p.y > maxY[p.x].y:
+            maxY[p.x] = p
+        if minY[p.x] is None or p.y < minY[p.x].y:
+            minY[p.x] = p
+    result = []
+    for i in range(maxX + 1):
+        if maxY[i] is not None:
+            result.append(maxY[i])
+    for i in range(maxX, -1, -1):
+        if minY[i] is not None and not result[len(result) - 1] == minY[i]:
+            result.append(minY[i])
+    if result[len(result) - 1] == result[0]:
+        del result[len(result) - 1]
+    return result
 
-    rest = filter(lambda e: not (triangleContientPoint(
-        ouest, sud, est, e) or triangleContientPoint(ouest, est, nord, e)), rest)
 
-    i = 0
-    while(i < len(result)):
-        a = result[i]
-        b = result[(i + 1) % len(result)]
-        ref = result[(i + 2) % len(result)]
-        signeRef = crossProduct(a, b, a, ref)
-        maxValue = 0
-        maxPoint = a
-
-        for p in points:
-            piki = crossProduct(a, b, a, p)
-            if signeRef * piki < 0 and abs(piki) > maxValue:
-                maxValue = abs(piki)
-                maxPoint = p
-
-        if maxValue != 0:
-            rest = filter(lambda e: not (triangleContientPoint(
-                ouest, sud, est, e) or triangleContientPoint(ouest, est, nord, e)), rest)
-            result.insert(i + 1, maxPoint)
-            i = i-1
+def graham(points):
+    """Return the convex hull given by Graham's algorithm"""
+    if len(points) < 4:
+        return None
+    result = trie_pixel(points)
+    i = 1
+    while i < len(result) + 2:
+        p = result[(i-1) % len(result)]
+        q = result[i % len(result)]
+        r = result[(i+1) % len(result)]
+        if crossProduct(p, q, p, r) > 0:
+            del result[i % len(result)]
+            if i == 2:
+                i = 1
+            if i > 2:
+                i -= 2
         i = i + 1
     return result
 
 
 def toussaint(points):
+    """Return the minimum bouding rectangle given by Toussaint's algorithm"""
 
     if len(points) < 4:
         return None
 
     # on récupère l'enveloppe convexe
-    enveloppe = quickHull(points)
+    enveloppe = graham(points)
 
     #   // Première étape : On cherche les quatre points extremes
     index_i = index_j = index_k = index_l = 0
