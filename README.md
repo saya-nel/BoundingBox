@@ -31,7 +31,7 @@ Vous pouvez modifier ce gap en passant un deuxieme argument, par exemple si je v
 
 **Si vous avez un problème avec le script de lancement** : Vous pouvez lancer manuelement le projet depuis la racine de celui-ci, via votre commande python, par exemple :
 
-`python3 graphics.main time 10000` : pour lancer les tests de vitesse avec un gap de 10 000.
+`python3 src/graphics.py time 10000` : pour lancer les tests de vitesse avec un gap de 10 000.
 
 ## Fichiers du projet
 
