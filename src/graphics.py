@@ -53,9 +53,9 @@ def showAlgorithms(points, name, gen=None):
     touss_l = [touss.a, touss.b, touss.c, touss.d]
     for i in range(1, len(touss_l)):
         plt.plot([touss_l[i - 1].x, touss_l[i].x],
-                 [touss_l[i - 1].y, touss_l[i].y], color='g')
+                 [touss_l[i - 1].y, touss_l[i].y], color='g', alpha=0.5)
     plt.plot([touss_l[0].x, touss_l[len(touss_l) - 1].x],
-             [touss_l[0].y, touss_l[len(touss_l) - 1].y], color='g')
+             [touss_l[0].y, touss_l[len(touss_l) - 1].y], color='g', alpha=0.5)
 
     # dislay
     plt.show()
