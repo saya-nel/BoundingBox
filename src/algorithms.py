@@ -219,7 +219,6 @@ def toussaint(points):
             res = rect
             min_area = rect.area()
 
-        # update finish conditions
         if (i_incr and i_ind == i_start) or (j_incr and j_ind == j_start) or (k_incr and k_ind == k_start) or (l_incr and l_ind == l_start):
             count = count + 1
         hullFinished = (count >= 4)
